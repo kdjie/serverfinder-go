@@ -1,4 +1,4 @@
-serverfinder-go 简单服务器发现实现go语言实现库
+﻿serverfinder-go 简单分布布服务器发现go语言实现库
 ===================================
 
 ### 项目说明：
@@ -168,9 +168,9 @@ type TagFilter struct {
 package main
 
 import (
-	"fmt"
-	"os"
-	"os/signal"
+    "fmt"
+    "os"
+    "os/signal"
     "syscall"
     "time"
     "serverfinder"
