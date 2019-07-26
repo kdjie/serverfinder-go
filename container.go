@@ -130,15 +130,19 @@ func (c *ServersContainer) GetServersByFilters(Filters ...interface{}) ([]Server
 
 	nameIndexs := []int{}
 	tagIndexs := []int{}
+	nameOperate := false
+	tagOperate := false
 
 	for _, Filter := range Filters {
 		switch Filter.(type) {
 		case NameFilter:
+			nameOperate = true
 			pNF := Filter.(NameFilter)
 			if pIndexs, ok := c.mapNameIndexs[pNF.Name]; ok {
 				nameIndexs = append(nameIndexs, (*pIndexs)...)
 			}
 		case TagFilter:
+			tagOperate = true
 			pTF := Filter.(TagFilter)
 			if pIndexs, ok := c.mapTagIndexs[pTF.Tag]; ok {
 				for _, Index := range *pIndexs {
@@ -156,7 +160,7 @@ func (c *ServersContainer) GetServersByFilters(Filters ...interface{}) ([]Server
 	resultIndexs := []int{}
 	andOperate := false
 
-	if len(nameIndexs) > 0 {
+	if nameOperate {
 		if !andOperate {
 			resultIndexs = append(resultIndexs, nameIndexs...)
 		} else {
@@ -176,7 +180,7 @@ func (c *ServersContainer) GetServersByFilters(Filters ...interface{}) ([]Server
 		andOperate = true
 	}
 
-	if len(tagIndexs) > 0 {
+	if tagOperate {
 		if !andOperate {
 			resultIndexs = append(resultIndexs, tagIndexs...)
 		} else {
