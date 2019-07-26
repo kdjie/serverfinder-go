@@ -187,6 +187,7 @@ func main() {
     s1.AddTag("app_kdjie") // 打一个APP标签
     s1.AddTag("group_changsha") // 打一个机房标签
     s1.StartPush()
+    defer s1.StopPush()
 
     // 通常只创建一个服务节点，这里创建两个是为了演示
     s2 := serverfinder.NewPushWorker()
@@ -196,11 +197,13 @@ func main() {
     s2.AddTag("group_changsha") // 打一个机房标签
     s2.SetExpire(600) // 默认30S过期，这里设置600S
     s2.StartPush()
+    defer s2.StopPush()
 
     // 创建拉取者
     p := serverfinder.NewPullWorker()
     // 启动拉取，返回容器索引
     c := p.StartPull()
+    defer p.StopPull()
 
     for {
         // 取所有服务器
@@ -224,11 +227,5 @@ func main() {
     s := make(chan os.Signal, 1)
     signal.Notify(s, os.Interrupt, syscall.SIGTERM)
     <-s
-
-    s1.StopPush()
-    s2.StopPush()
-    p.StopPull()
-
-    fmt.Println("ok")
 }
 ```

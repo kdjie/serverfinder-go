@@ -1,10 +1,8 @@
 ﻿package serverfinder
 
 import (
-	"fmt"
 	"time"
 	"sync"
-	"encoding/json"
 )
 
 // 推送者结构定义
@@ -89,29 +87,12 @@ func (p *PushWorker) __loop() {
 	}
 }
 
-// 格式化服务器节点的key
-func (p *PushWorker) __toNodeKey() (string) {
-	return fmt.Sprintf("%s_%s_%s:%d", SERVER_KEY_PREFIX, p.server.Name, p.server.Ip, p.server.Port)
-}
-
-// 格式化服务器节点为json
-func (p *PushWorker) __toNodeJson() (string) {
-	p.server.LiveTick = time.Now().Unix()
-
-	data, err := json.Marshal(p.server)
-	if err != nil {
-		return ""
-	}
-
-	return string(data)
-}
-
 // 执行一次推送
 func (p *PushWorker) __push() (error) {
 	client := __getRedicClient()
 	defer client.Close()
 
-	pCmd := client.Set(p.__toNodeKey(), p.__toNodeJson(), time.Second * time.Duration(p.expireSeconds))
+	pCmd := client.Set(p.server.toKey(), p.server.toJson(), time.Second * time.Duration(p.expireSeconds))
 	_, err := pCmd.Result()
 	if err != nil {
 		return err
@@ -125,5 +106,5 @@ func (p *PushWorker) __delete() {
 	client := __getRedicClient()
 	defer client.Close()
 
-	client.Del( p.__toNodeKey() )
+	client.Del( p.server.toKey() )
 }

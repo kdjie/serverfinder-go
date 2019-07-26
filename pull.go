@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 	"sync"
-	"encoding/json"
 )
 
 // 拉取者结构定义
@@ -71,35 +70,40 @@ func (p *PullWorker) __pull() (error) {
 
 	// 先取keys
 	pCmd := client.Keys( fmt.Sprintf("%s_*", SERVER_KEY_PREFIX) )
-	val, err := pCmd.Result()
+	keys, err := pCmd.Result()
 	if err != nil {
 		return err
 	}
 
-	if len(val) > 0 {
-		// 再取values
-		pCmd := client.MGet(val...)
-		vals, err := pCmd.Result()
-		if err != nil {
-			return err
-		}
-
+	// 为空时仍然更新容器
+	if len(keys) == 0 {
 		p.servers = []ServerNode{}
+		p.container.__update(p.servers)
+		return nil
+	}
 
-		for _, val := range vals {
-			if data, ok := val.(string); ok {
-				server := ServerNode{}
-				err = json.Unmarshal([]byte(data), &server)
-				if err == nil {
-					p.servers = append(p.servers, server)
-				}
+	// 再取values
+	pCmd2 := client.MGet(keys...)
+	vals, err := pCmd2.Result()
+	if err != nil {
+		return err
+	}
+
+	p.servers = []ServerNode{}
+
+	for _, val := range vals {
+		if data, ok := val.(string); ok {
+			// 解析
+			server := ServerNode{}
+			if server.fromJson(data) {
+				p.servers = append(p.servers, server)
 			}
 		}
-
-		//fmt.Println(p.servers)
-		// 将结果放到索引容器中
-		p.container.__update(p.servers)
 	}
+
+	//fmt.Println(p.servers)
+	// 将结果放到索引容器中
+	p.container.__update(p.servers)
 
 	return nil
 }
